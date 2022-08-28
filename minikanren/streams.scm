@@ -1,7 +1,9 @@
 (define-module (minikanren streams)
   #:export (pull stream-map stream-take take take-all
 		 mzero mplus mplus/dfs unit mbind mbind/dfs mapm
-		 conj disj conj/dfs disj/dfs))
+		 conj disj conj/dfs disj/dfs DELAY-CDRS?))
+
+(define DELAY-CDRS? #t)
 
 ;; A stream is one of
 ;;  * nil
@@ -46,12 +48,26 @@
 
 (define mzero '())
 
-(define (mplus $1 $2)
-  (cond
-   ((null? $1) $2)
-   ((procedure? $1) ;; Switch for fairness, give every branch a chance
-    (lambda () (mplus $2 ($1))))
-   (else (cons (car $1) (mplus (cdr $1) (lambda () $2))))))
+(define mplus
+  (if DELAY-CDRS?
+	  (letrec
+		  ((mplus
+			(lambda ($1 $2)
+			  (cond
+			   ((null? $1) $2)
+			   ((procedure? $1) ;; Switch for fairness, give every branch a chance
+				(lambda () (mplus $2 ($1))))
+			   (else (cons (car $1) (mplus (cdr $1) (lambda () $2))))))))
+		mplus)
+	  (letrec
+		  ((mplus
+			(lambda ($1 $2)
+			  (cond
+			   ((null? $1) $2)
+			   ((procedure? $1) ;; Switch for fairness, give every branch a chance
+				(lambda () (mplus $2 ($1))))
+			   (else (cons (car $1) (mplus (cdr $1) $2)))))))
+		mplus)))
 
 (define (mplus/dfs $1 $2)
   (cond
@@ -63,13 +79,24 @@
 
 (define (unit k) (cons k mzero))
 
-(define (mbind $ g)
-  (cond
-   ((null? $) mzero)
-   ((procedure? $) (lambda () (mbind ($) g)))
-   (else (mplus (g (car $)) (lambda ()
-			      (mbind (cdr $) g))))))
-;(else (mplus (g (car $)) (mbind (cdr $) g)))))
+(define mbind
+  (if DELAY-CDRS?
+	  (letrec
+		  ((mbind
+			(lambda ($ g)
+			  (cond
+			   ((null? $) mzero)
+			   ((procedure? $) (lambda () (mbind ($) g)))
+			   (else (mplus (g (car $)) (lambda () (mbind (cdr $) g))))))))
+		mbind)
+	  (letrec
+		  ((mbind
+			(lambda ($ g)
+			  (cond
+			   ((null? $) mzero)
+			   ((procedure? $) (lambda () (mbind ($) g)))
+			   (else (mplus (g (car $)) (mbind (cdr $) g)))))))
+		mbind)))
 
 (define (mbind/dfs $ g)
   (cond

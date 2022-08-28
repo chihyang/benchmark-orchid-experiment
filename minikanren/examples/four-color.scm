@@ -1,7 +1,8 @@
 (define-module (minikanren examples four-color)
   #:export (do-australia do-canada do-america timing-test))
 (use-modules (minikanren language)
-	     (minikanren examples lists)
+			 (minikanren streams)
+			 (minikanren examples lists)
 	     
 	     ((minikanren examples data australia)
               #:renamer (symbol-prefix-proc 'australia:))
@@ -107,26 +108,29 @@
     (make-assoc-tableo states colors table)
     
     ;; make sure each color is different to neighbours
-    (mapo (different-colors table) edges (== 0 0))
+    (mapo (different-colors table) edges)
     
     ;; brute force search for a valid coloring
-    (mapo coloro colors (== 0 0))))
+    (mapo coloro colors)))
 
 (define (do-australia)
   (let ((nodes (graph-good-ordering australia:nodes australia:edges)))
     (display nodes)(newline)
-    (run^ 1 (lambda (q) (color nodes australia:edges q)))))
+	(run^ 1 (lambda (q) (color nodes australia:edges q)))))
 
 (define (do-canada)
   (let ((nodes (graph-good-ordering canada:nodes canada:edges)))
     (display nodes)(newline)
-    (run^ 1 (lambda (q) (color nodes canada:edges q)))))
+	(run^ 1 (lambda (q) (color nodes canada:edges q)))))
 
 (define (do-america)
   (let ((nodes (graph-good-ordering america:nodes america:edges)))
     (display nodes)(newline)
-    (run^ 1 (lambda (q) (color nodes america:edges q)))))
+	(run^ 1 (lambda (q) (color nodes america:edges q)))))
 
+(format #t "Are we delaying cdrs of streams? ~s~%" DELAY-CDRS?)
+(format #t "Are we using mapo w/the accumulator? ~s~%" MAPO-WITH-ACCUMULATOR?)
+(format #t "If not, are we using mapo w/the recursion first? ~s~%" MAPO-WITH-RECURSION-FIRST?)
 
 ;; This was left around from debugging/benchmarking
 

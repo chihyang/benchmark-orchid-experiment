@@ -5,8 +5,13 @@
 		    
 		    same-lengtho
 		    make-assoc-tableo
+			MAPO-WITH-ACCUMULATOR?
+			MAPO-WITH-RECURSION-FIRST?
 		    ))
 (use-modules (minikanren language))
+
+(define MAPO-WITH-ACCUMULATOR? #t)
+(define MAPO-WITH-RECURSION-FIRST? #f)
 
 (define (membero x l)
   (fresh (car cdr)
@@ -37,22 +42,37 @@
 	      (== l-x `(,car . ,cdr-x))
 	      (selecto x cdr cdr-x))))))
 
-;; (define (mapo p l)
-;;   (conde ((== l '()))
-;; 	 ((fresh (car cdr)
-;; 	    (== l `(,car . ,cdr))
-;; 	    (p car)
-;; 	    (mapo p cdr)))))
-
-(define (mapo p l acc)
-  (conde
-   [(== l '())
-    acc]
-   [(fresh (car cdr)
-	   (== l `(,car . ,cdr))
-	   (mapo p cdr (fresh ()
-			      acc
-			      (p car))))]))
+(define mapo
+  (if MAPO-WITH-ACCUMULATOR?
+	  (letrec
+		  ((mapo
+			(lambda* (p l #:optional (acc (== 'cat 'cat)))
+			  (conde
+			   [(== l '())
+				acc]
+			   [(fresh (car cdr)
+				  (== l `(,car . ,cdr))
+				  (mapo p cdr (fresh () acc (p car))))]))))
+		mapo)
+	  (if MAPO-WITH-RECURSION-FIRST?
+		  (letrec
+			((mapo
+			  (lambda (p l)
+				(conde ((== l '()))
+				  ((fresh (car cdr)
+					 (== l `(,car . ,cdr))
+					 (mapo p cdr)
+					 (p car)))))))
+			mapo)
+		  (letrec
+			((mapo
+			  (lambda (p l)
+				(conde ((== l '()))
+				  ((fresh (car cdr)
+					 (== l `(,car . ,cdr))
+					 (p car)
+					 (mapo p cdr)))))))
+			mapo))))
 
 (define (assoco key table value)
   (fresh (car table-cdr)
