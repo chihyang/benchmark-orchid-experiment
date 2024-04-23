@@ -1,8 +1,8 @@
 (define-module (minikanren language)
   #:use-module (minikanren run)
   #:use-module (minikanren disequality)
-  #:export (fresh conde fresh/dfs conde/dfs ==)
-  #:re-export (run^ run* runi =/=))
+  #:export (fresh conde fresh/dfs conde/dfs)
+  #:re-export (run^ run* runi runc =/= ==))
 (use-modules (minikanren streams)
 	     (minikanren kanren)
 	     (minikanren unification))
@@ -62,14 +62,3 @@
   (syntax-rules ()
     ((_ (g0 g ...) ...) (disj+/dfs (conj+ g0 g ...) ...))))
 
-;;
-;; Unification
-;;
-
-(define (== u v)
-  (lambda (k)
-    (let-values (((s p) (unify/prefix u v (substitution k))))
-      (if s
-	  (normalize-disequality-store
-           (modified-substitution (lambda (_) s) k))
-	  mzero))))
