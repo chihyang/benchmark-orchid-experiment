@@ -1,5 +1,5 @@
 (define-module (minikanren examples four-color)
-  #:export (do-australia do-canada do-america timing-test))
+  #:export (do-australia do-australia/code do-canada do-canada/code do-america do-america/code timing-test))
 (use-modules (minikanren language)
 			 (minikanren streams)
 			 (minikanren examples lists)
@@ -118,15 +118,27 @@
     (display nodes)(newline)
 	(run^ 1 (lambda (q) (color nodes australia:edges q)))))
 
+(define (do-australia/code)
+  (let ((nodes (graph-good-ordering australia:nodes australia:edges)))
+    (lambda (q) (color nodes australia:edges q))))
+
 (define (do-canada)
   (let ((nodes (graph-good-ordering canada:nodes canada:edges)))
     (display nodes)(newline)
 	(run^ 1 (lambda (q) (color nodes canada:edges q)))))
 
+(define (do-canada/code)
+  (let ((nodes (graph-good-ordering canada:nodes canada:edges)))
+    (lambda (q) (color nodes canada:edges q))))
+
 (define (do-america)
   (let ((nodes (graph-good-ordering america:nodes america:edges)))
     (display nodes)(newline)
-	(run^ 1 (lambda (q) (color nodes america:edges q)))))
+	(run^ 2 (lambda (q) (color nodes america:edges q)))))
+
+(define (do-america/code)
+  (let ((nodes (graph-good-ordering america:nodes america:edges)))
+    (lambda (q) (color nodes america:edges q))))
 
 (format #t "Are we delaying cdrs of streams? ~s~%" DELAY-CDRS?)
 (format #t "Are we using mapo w/the accumulator? ~s~%" MAPO-WITH-ACCUMULATOR?)
